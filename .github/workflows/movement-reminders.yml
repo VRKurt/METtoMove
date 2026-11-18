@@ -1,0 +1,45 @@
+name: Movement reminders
+on:
+  schedule:
+    - cron: '17 * * * 3,5,0'
+  workflow_dispatch:
+    inputs:
+      reminder:
+        description: Reminder to send
+        required: true
+        default: test
+        type: choice
+        options: [test, wed, fri, sun]
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - name: Select reminder for Europe/Brussels
+        id: select
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "kind=${{ inputs.reminder }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          LOCAL_DAY=$(TZ=Europe/Brussels date +%u)
+          LOCAL_HOUR=$(TZ=Europe/Brussels date +%H)
+          KIND=""
+          [ "$LOCAL_DAY" = "3" ] && [ "$LOCAL_HOUR" = "19" ] && KIND="wed"
+          [ "$LOCAL_DAY" = "5" ] && [ "$LOCAL_HOUR" = "18" ] && KIND="fri"
+          [ "$LOCAL_DAY" = "7" ] && [ "$LOCAL_HOUR" = "10" ] && KIND="sun"
+          echo "kind=$KIND" >> "$GITHUB_OUTPUT"
+      - name: Send push
+        if: steps.select.outputs.kind != ''
+        env:
+          VAPID_PUBLIC_KEY: ${{ vars.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: node send-push.js "${{ steps.select.outputs.kind }}"
