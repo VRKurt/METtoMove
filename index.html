@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Movement">
+<link rel="manifest" href="manifest.json">
 <title>Movement Points</title>
 <style>
 :root{--g:#173f35;--g2:#2d735d;--b:#477fa8;--bg:#f4f6f4;--muted:#68736e;--line:#dbe3df;--orange:#d18b3e;--red:#a94444;--green:#1f684f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#19231f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{width:min(100%,700px);margin:auto;padding:14px 11px 50px}.card{background:#fff;border-radius:17px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px #0000000c}h1,h2{color:var(--g)}h1{margin:0;font-size:28px}h2{margin:0 0 13px;font-size:20px}header{padding:3px 2px 13px}header p,.help{font-size:12px;color:var(--muted)}.top,.meta{display:flex;justify-content:space-between;gap:10px}.score{font-size:36px;font-weight:750;color:var(--g)}.score small{font-size:14px;color:var(--muted);font-weight:500}.badge{display:inline-block;padding:6px 9px;border-radius:999px;background:#e7efeb;color:var(--g);font-size:12px;font-weight:750}.progress{height:12px;background:#e3e9e6;border-radius:99px;overflow:hidden;margin:14px 0 8px}.progress>span{display:block;height:100%;background:var(--g2);width:0;transition:width .2s}.meta{font-size:12px;color:var(--muted)}.targets{display:grid;gap:9px;margin-top:15px}.target{padding:11px;border-radius:11px;background:#f0f4f2}.targetTop{display:flex;justify-content:space-between;gap:10px;font-size:12px}.target strong{color:var(--g)}.target.done{background:#dff1e8}.tinyBar{height:7px;background:#d6e0dc;border-radius:9px;overflow:hidden;margin-top:8px}.tinyBar span{display:block;height:100%;background:var(--g2);width:0}.target.done .tinyBar span{background:var(--green)}label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}input,select,button{font:inherit;min-height:46px;border-radius:11px}input,select{width:100%;border:1px solid #cdd7d2;padding:10px;background:#fff}button{width:100%;border:0;background:var(--g);color:#fff;font-weight:700;padding:10px 14px}.secondary{background:#e7efeb;color:var(--g)}.danger{background:#f6e8e8;color:var(--red)}.calc{background:#e9f3ee;color:var(--g);padding:12px;border-radius:11px;margin:14px 0}.calc strong{font-size:21px}.rule{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}.item{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.detail{font-size:12px;color:var(--muted);margin-top:3px}.pts{font-weight:750;color:var(--g2);text-align:right}.delete{min-height:25px;width:auto;padding:2px;background:none;color:var(--red);font-size:11px}.empty{text-align:center;color:var(--muted);padding:14px}.weekLine{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.weekLine strong{color:var(--g)}.row{display:flex;gap:9px}.row>*{flex:1}.modal{position:fixed;inset:0;background:#0b1d18aa;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal.show{display:flex}.dialog{width:min(100%,520px);background:#fff;border-radius:18px;padding:20px;box-shadow:0 18px 60px #0005}.choice{margin-top:10px;text-align:left;padding:14px}.choice span{display:block;font-size:12px;font-weight:500;opacity:.82;margin-top:4px}.choice.regular{background:var(--b)}.note{font-size:11px;color:var(--muted);line-height:1.45}.auditOnly,.regularOnly{display:none}.showAudit .auditOnly,.showRegular .regularOnly{display:block}@media(max-width:520px){.app{padding:9px 8px 38px}.card{padding:14px;border-radius:14px}h1{font-size:25px}.score{font-size:30px}.row{flex-direction:column}}
@@ -37,11 +38,16 @@
 <p class="help">1 point = 40 MET-minutes. Steps use the existing conservative bonus: 0 points through 4,000; then 0.5 point per additional 1,000, capped at 4 points per day.</p>
 <p class="note">Implementation assumption: “light activity” in an audit week is shown as 5 days with at least 10,000 steps. Change AUDIT_STEP_DAYS or AUDIT_STEP_THRESHOLD in the script if you prefer another threshold.</p>
 </section>
+<section class="card"><h2>Push reminders</h2><p class="help">Enable scheduled iPhone reminders for Wednesday, Friday and Sunday. After enabling, copy the subscription and save it as the GitHub Actions secret described in SETUP.md.</p><button id="enablePush">Enable push notifications</button><button id="copyPush" class="secondary" style="margin-top:9px" disabled>Copy GitHub subscription</button><p class="note" id="pushStatus">Push notifications are not configured yet.</p></section>
 </main>
 <div class="modal" id="weekModal" role="dialog" aria-modal="true" aria-labelledby="weekQuestion"><div class="dialog">
 <h2 id="weekQuestion">What kind of week is this?</h2><p class="help" id="modalDates"></p>
 <button class="choice" data-week-type="audit">Audit week<span>Track light movement, 1 × 20 min gym workout and 2 × 15 min power training.</span></button>
 <button class="choice regular" data-week-type="regular">Regular week<span>Track steps and achieve at least 600 MET-min of aerobic activity. No strength target.</span></button>
+</div></div>
+<div class="modal" id="reminderModal" role="dialog" aria-modal="true" aria-labelledby="reminderTitle"><div class="dialog">
+<h2 id="reminderTitle">Movement reminder</h2><p id="reminderMessage" style="white-space:pre-line;line-height:1.6;font-size:14px"></p>
+<button id="dismissReminder">Got it</button><p class="note">Reminders appear only when you open the app, once per checkpoint. Activity logged later updates the assessment.</p>
 </div></div>
 <script>
 const $=id=>document.getElementById(id);
@@ -81,12 +87,58 @@ function auditStatus(rows){let stepDays=new Set(rows.filter(x=>x.type==='steps'&
 function regularStatus(rows){let aerobic=rows.filter(x=>x.type!=='steps').reduce((s,x)=>s+x.points,0);return{complete:aerobic>=REGULAR_MIN_POINTS,pct:Math.min(100,aerobic/REGULAR_MIN_POINTS*100),aerobic,html:targetCard('Aerobic activity',aerobic.toFixed(1),REGULAR_MIN_POINTS,aerobic>=REGULAR_MIN_POINTS,' pts')}}
 function render(){let key=currentWeekKey(),wt=currentType(),rows=rowsForWeek(key);$('weekDates').textContent=weekLabel(key);$('app').className='app '+(wt==='audit'?'showAudit':wt==='regular'?'showRegular':'');if(!wt){$('weekTypeBadge').textContent='Choose week type';$('earned').textContent='0.0';$('targets').innerHTML='<div class="empty">Select audit week or regular week.</div>';$('overallBar').style.width='0%';$('overallText').textContent='No weekly plan selected';$('activityList').innerHTML='<div class="empty">Choose the week type to begin.</div>';return}let total=rows.reduce((s,x)=>s+x.points,0),status=wt==='audit'?auditStatus(rows):regularStatus(rows);$('weekTypeBadge').textContent=wt==='audit'?'Audit week':'Regular week';$('earned').textContent=total.toFixed(1);$('targets').innerHTML=status.html;$('overallBar').style.width=Math.min(100,status.pct)+'%';$('overallText').textContent=status.complete?'Weekly plan achieved':Math.round(status.pct)+'% of weekly plan';$('activityList').innerHTML=rows.length?[...rows].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).map(a=>`<div class="item"><div><strong>${a.name}</strong><div class="detail">${a.quantity} ${a.unit} · ${shortDate(a.date)}${a.met?' · '+a.met+' MET':''}</div></div><div class="pts">+${a.points.toFixed(1)} pts<br><button class="delete" data-id="${a.id}">Delete</button></div></div>`).join(''):'<div class="empty">No activity logged this week.</div>';document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{activities=activities.filter(x=>x.id!==Number(b.dataset.id));write('movementActivitiesFreshV1',activities);renderHistory();render()});renderHistory()}
 function renderHistory(){let keys=[...new Set([...Object.keys(weekPlans),...activities.map(a=>dateKey(monday(new Date(a.date+'T12:00:00'))))])].sort().reverse().slice(0,8);$('weekHistory').innerHTML=keys.length?keys.map(k=>{let wt=weekPlans[k],rows=rowsForWeek(k),status=wt==='audit'?auditStatus(rows):wt==='regular'?regularStatus(rows):null;return `<div class="weekLine"><span><strong>${weekLabel(k)}</strong><br>${wt?wt[0].toUpperCase()+wt.slice(1)+' week':'Unclassified'}</span><span>${status&&status.complete?'✓ Achieved':status?Math.round(status.pct)+'%':'–'}</span></div>`}).join(''):'<div class="empty">No weekly history yet.</div>'}
+// Checkpoints run on app opening: Wednesday from 19:00, Friday from 18:00, Sunday from 10:00.
+// Each checkpoint is shown at most once per week, and only when the plan is at risk.
+function reminderCheckpoint(now){let day=now.getDay(),hour=now.getHours();if(day===0&&hour>=10)return 'sun';if(day===5&&hour>=18)return 'fri';if((day===3&&hour>=19)||day===4||day===5||day===6||day===0)return 'wed';return null}
+function reminderAssessment(now){let wt=currentType();if(!wt)return null;let rows=rowsForWeek(currentWeekKey());let day=now.getDay()||7,remainingDays=7-day,lines=[];
+if(wt==='audit'){
+ let stepDates=new Set(rows.filter(x=>x.type==='steps'&&x.quantity>=AUDIT_STEP_THRESHOLD).map(x=>x.date));
+ let gymDone=rows.some(x=>x.type==='gym'&&x.quantity>=20);
+ let powerDates=new Set(rows.filter(x=>x.type==='power'&&x.quantity>=15).map(x=>x.date));
+ let stepNeed=Math.max(0,AUDIT_STEP_DAYS-stepDates.size),powerNeed=Math.max(0,2-powerDates.size);
+ // At Wednesday checkpoint, flag if the remaining required days already exceed days left after today.
+ let risk=stepNeed>remainingDays || powerNeed>remainingDays || (day>=5&&(stepNeed>=remainingDays||powerNeed>=remainingDays||!gymDone));
+ if(!risk)return null;
+ lines.push('Steps: '+stepDates.size+'/'+AUDIT_STEP_DAYS+' qualifying days (10,000 steps each).');
+ lines.push('Gym: '+(gymDone?'completed':'20-minute workout still needed.'));
+ lines.push('Power training: '+powerDates.size+'/2 days (15 minutes each).');
+ if(stepNeed>remainingDays)lines.push('The step-day target is no longer achievable unless today can still qualify.');
+ else if(stepNeed)lines.push('Aim for '+stepNeed+' more qualifying step day(s).');
+ if(powerNeed)lines.push('Plan '+powerNeed+' more power-training day(s).');
+}else{
+ let pts=rows.filter(x=>x.type!=='steps').reduce((s,x)=>s+x.points,0),need=Math.max(0,REGULAR_MIN_POINTS-pts);
+ // Progress expectation: by Wed night 40%, Fri evening 70%, Sun morning 90%.
+ let expected=day===3?0.4:day===4?0.4:day===5?0.7:day===6?0.7:0.9;
+ if(pts>=REGULAR_MIN_POINTS || pts>=REGULAR_MIN_POINTS*expected)return null;
+ lines.push('Aerobic activity: '+pts.toFixed(1)+' / '+REGULAR_MIN_POINTS+' points.');
+ lines.push(need.toFixed(1)+' points remaining.');
+ lines.push('Approximately '+Math.ceil(need*40/7.5/5)*5+' min rowing or '+Math.ceil(need*40/8.5/5)*5+' min jogging to reach your goal.');
+}
+return lines.join('\n');}
+function checkReminder(){if($('weekModal').classList.contains('show'))return;let now=new Date(),checkpoint=reminderCheckpoint(now),key=currentWeekKey();if(!checkpoint||!currentType())return;
+let seen=read('movementReminderSeenV1',{}),id=key+':'+checkpoint;if(seen[id])return;
+let message=reminderAssessment(now);if(!message)return;
+$('reminderTitle').textContent=checkpoint==='wed'?'Midweek movement check':checkpoint==='fri'?'Friday movement check':'Sunday movement reminder';
+$('reminderMessage').textContent=message;$('reminderModal').classList.add('show');
+seen[id]=true;write('movementReminderSeenV1',seen);
+}
+$('dismissReminder').onclick=()=>{$('reminderModal').classList.remove('show')};
 function openWeekModal(){let key=currentWeekKey();$('modalDates').textContent='Week of '+weekLabel(key);$('weekModal').classList.add('show')}
 function closeWeekModal(){$('weekModal').classList.remove('show')}
-document.querySelectorAll('[data-week-type]').forEach(b=>b.onclick=()=>{weekPlans[currentWeekKey()]=b.dataset.weekType;write('movementWeekPlansFreshV1',weekPlans);closeWeekModal();populateActivities();render()});
+document.querySelectorAll('[data-week-type]').forEach(b=>b.onclick=()=>{weekPlans[currentWeekKey()]=b.dataset.weekType;write('movementWeekPlansFreshV1',weekPlans);closeWeekModal();populateActivities();render();checkReminder()});
 $('changeWeek').onclick=openWeekModal;$('type').onchange=updateActivity;$('amount').oninput=updateActivity;
 $('addActivity').onclick=()=>{let wt=currentType();if(!wt)return openWeekModal();let quantity=Number($('amount').value),date=$('date').value,type=$('type').value;if(!(quantity>0)||!date)return alert('Enter an amount and date.');let entryWeek=dateKey(monday(new Date(date+'T12:00:00')));if(entryWeek!==currentWeekKey())return alert('This version logs activities for the current week only.');let a=catalogs[wt][type],entry={id:Date.now(),date,weekType:wt,type,name:a.name,quantity,unit:a.unit,met:a.met,points:activityPoints(type,quantity,wt)};if(type==='steps'){let i=activities.findIndex(x=>x.type==='steps'&&x.date===date);if(i>=0)activities[i]=entry;else activities.push(entry)}else activities.push(entry);write('movementActivitiesFreshV1',activities);$('amount').value='';updateActivity();render()};
 $('date').value=new Date().toLocaleDateString('en-CA');
-populateActivities();render();if(!currentType())openWeekModal();
+populateActivities();render();if(!currentType())openWeekModal();else checkReminder();
+
+const VAPID_PUBLIC_KEY='BEahmM1F39IlcgrHl7Y_ByU1KsdpfOcXrBdJBfw8PsOxvsnOH1BAGL1C1t1zhp-OqasNjbd5LD3lR6AsKr_j6vk';
+function urlBase64ToUint8Array(value){let padding='='.repeat((4-value.length%4)%4),base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
+async function getPushSubscription(){if(!('serviceWorker' in navigator)||!('PushManager' in window))throw new Error('Push notifications are not supported on this device.');let reg=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub){let permission=await Notification.requestPermission();if(permission!=='granted')throw new Error('Notification permission was not granted.');sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})}localStorage.setItem('movementPushSubscription',JSON.stringify(sub));return sub}
+async function refreshPushStatus(){let saved=localStorage.getItem('movementPushSubscription');$('copyPush').disabled=!saved;$('pushStatus').textContent=saved?'Notifications enabled. Copy the subscription to GitHub Secrets to activate scheduled delivery.':'Push notifications are not configured yet.'}
+$('enablePush').onclick=async()=>{try{await getPushSubscription();await refreshPushStatus();alert('Notifications enabled. Now copy the GitHub subscription and add it as the PUSH_SUBSCRIPTION repository secret.')}catch(e){alert(e.message)}};
+$('copyPush').onclick=async()=>{let value=localStorage.getItem('movementPushSubscription');if(!value)return;try{await navigator.clipboard.writeText(value);alert('Subscription copied.')}catch{prompt('Copy this subscription:',value)}};
+refreshPushStatus();
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();checkReminder()}});
 </script>
 </body></html>
