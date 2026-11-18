@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-                - run: npm install
+      - run: npm install
       - name: Select reminder for Europe/Brussels
         id: select
         shell: bash
